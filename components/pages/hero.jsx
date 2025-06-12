@@ -4,7 +4,7 @@ function Hero() {
   return (
     <>
       <section>
-        <div className="flex flex-col items-center justify-center h-svh">
+        <div className="flex flex-col items-center justify-center h-svh bg-black text-white">
           <div>
             <h1 className="text-8xl font-bold text-center mb-4">Flash Mind</h1>
             <p className="text-lg text-center mb-8">
