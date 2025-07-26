@@ -33,13 +33,15 @@ function Dashboard() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ topic, numCards, difficulty})
+      body: JSON.stringify({ topic, numCards, difficulty }),
     });
 
     const data = await res.json();
     if (res.ok) {
       console.log("Flashcards generated:", data.cards);
       // Handle the generated flashcards, e.g., navigate to a new page or display them
+      const encoded = encodeURIComponent(JSON.stringify(data.cards));
+      window.location.href = `/flashcards/view?data=${encoded}`;
     } else {
       console.error("Error generating flashcards:", data.error);
       // Optionally handle error, e.g., show a notification

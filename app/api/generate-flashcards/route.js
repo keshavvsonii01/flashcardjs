@@ -15,8 +15,15 @@ export async function POST(req) {
 
     const result = await model.generateContent(prompt);
     const response = result.response.text();
+    const cleanText = response
+      .replace(/^```json/, "") // remove starting ```json
+      .replace(/^```/, "") // just in case it's ``` without json
+      .replace(/```$/, "") // remove ending ```
+      .trim();
 
-    return new Response(JSON.stringify({ cards: response }), {
+    const parsed = JSON.parse(cleanText);
+
+    return new Response(JSON.stringify({ cards: parsed }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
