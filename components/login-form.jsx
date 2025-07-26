@@ -1,5 +1,9 @@
-import { GalleryVerticalEnd } from "lucide-react"
+"use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { GalleryVerticalEnd } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,6 +13,31 @@ export function LoginForm({
   className,
   ...props
 }) {
+
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const res = await fetch("/api/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password })
+      })
+      const data = await res.json();
+
+      if(res.ok) {
+        router.push("/dashboard");
+      } else {
+        console.error("Login failed:", data.error);
+        alert(data.error || "Login failed");
+      }
+    // Handle login logic here
+    console.log("Logging in with:", { email, password });
+    // Redirect or perform other actions after login
+    router.push("/dashboard");
+  };
+
   return (
     (<div className={cn("flex flex-col gap-6 text-white", className)} {...props}>
       <form>
@@ -31,13 +60,14 @@ export function LoginForm({
           <div className="flex flex-col gap-6">
             <div className="grid gap-3">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" required />
+              <Input id="email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
              <div className="grid gap-3">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required />
+              <Input id="password" type="password"
+              alue={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" onClick= {handleSubmit} className="w-full cursor-pointer">
               Login
             </Button>
           </div>
