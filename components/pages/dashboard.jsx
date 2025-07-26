@@ -1,7 +1,51 @@
+"use client";
+
 import React from "react";
 import { Brain } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 function Dashboard() {
+  const router = useRouter();
+  const logout = async () => {
+    try {
+      await fetch("/api/logout", {
+        method: "POST",
+      });
+      router.push("/login");
+    } catch (e) {
+      console.error("Logout error:", e);
+      // Optionally handle error, e.g., show a notification
+    }
+  };
+
+  const [topic, setTopic] = useState("");
+  const [numCards, setNumCards] = useState(5);
+  const [difficulty, setDifficulty] = useState("beginner");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    console.log({ topic, numCards, difficulty });
+
+    // Here you would typically send the data to your API to generate flashcards
+    const res = await fetch("/api/generate-flashcards", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ topic, numCards, difficulty})
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      console.log("Flashcards generated:", data.cards);
+      // Handle the generated flashcards, e.g., navigate to a new page or display them
+    } else {
+      console.error("Error generating flashcards:", data.error);
+      // Optionally handle error, e.g., show a notification
+    }
+  };
+
   return (
     <>
       <div className="text-shadow-2xs">
@@ -27,10 +71,7 @@ function Dashboard() {
                 boxShadow: "0 0 20px 5px rgba(199, 21, 133, 0.7)",
               }}
             >
-              <form
-                //   onSubmit={handleSubmit}
-                className="space-y-6"
-              >
+              <form onSubmit={handleSubmit} className="space-y-6">
                 {/* {error && (
                   <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded-md">
                     {error}
@@ -47,8 +88,8 @@ function Dashboard() {
                   <input
                     type="text"
                     id="topic"
-                    // value={topic}
-                    // onChange={(e) => setTopic(e.target.value)}
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
                     className="w-full px-3 py-2 text-white  border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-gray-300 focus:border-white dark:bg-gray-700 dark:text-white"
                     placeholder="e.g., Spanish vocabulary, Biology cells, JavaScript concepts"
                     required
@@ -68,10 +109,10 @@ function Dashboard() {
                   </label>
                   <select
                     id="numCards"
-                    // value={numCards}
-                    // onChange={(e) =>
-                    //   setNumCards(Number.parseInt(e.target.value))
-                    // }
+                    value={numCards}
+                    onChange={(e) =>
+                      setNumCards(Number.parseInt(e.target.value))
+                    }
                     className="w-full px-3 py-2 text-black border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-gray-200 focus:border-gray-200 bg-gray-100 dark:text-white"
                   >
                     <option value={5}>5 cards</option>
@@ -91,8 +132,8 @@ function Dashboard() {
                   </label>
                   <select
                     id="difficulty"
-                    // value={difficulty}
-                    // onChange={(e) => setDifficulty(e.target.value)}
+                    value={difficulty}
+                    onChange={(e) => setDifficulty(e.target.value)}
                     className="w-full px-3 py-2 text-black border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-gray-200 focus:border-gray-200 bg-gray-100 dark:text-white"
                   >
                     <option value="beginner">Beginner</option>
@@ -104,7 +145,7 @@ function Dashboard() {
                 <button
                   type="submit"
                   //   disabled={isGenerating || !topic.trim()}
-                  className="w-full flex items-center justify-center space-x-2 bg-gray-950 text-white border  py-3 px-4 rounded-md hover:bg-white hover:text-black hover:border-neutral-950 hover:border-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer text-shadow-2xs"
+                  className="w-full flex items-center justify-center space-x-2 bg-gray-950 text-white border  py-3 px-4 rounded-md hover:bg-white hover:text-black hover:border-neutral-950 hover:border-2 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer text-shadow-2xs"
                 >
                   {/* {isGenerating ? (
                     <>
@@ -137,6 +178,11 @@ function Dashboard() {
                   <li>• Start with fewer cards and add more as needed</li>
                 </ul>
               </div>
+            </div>
+            <div>
+              <button className="text-white" onClick={logout}>
+                LogOut
+              </button>
             </div>
           </div>
         </div>

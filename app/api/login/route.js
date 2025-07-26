@@ -1,23 +1,36 @@
 import connectDB from "@/lib/db";
 import UserDetails from "@/models/Logindetails";
 import bcrypt from "bcryptjs";
+import { SignJWT } from "jose";
+
+const SECRET = process.env.JWT_SECRET;
 
 export async function POST(req) {
-    try{
-        await connectDB();
-        const { email, password } = await req.json();
+  const { email, password } = await req.json();
+  await connectDB();
 
-        
-        const user = await UserDetails.findOne({ email });
-        if(!user) return Response.json({ error: "User not found" }, { Status: 401});
+  const user = await UserDetails.findOne({ email });
 
-        const isMatch = await bcrypt.compare(password, user.password);
-        if(!isMatch) return Response.json({ error: "Invalid credentials" }, { Status: 401 });
+  if (!user) {
+    return Response.json({ error: "User not found" }, { status: 401 });
+  }
 
-        return Response.json({ message: "Login successful" },{user : {email: user.email}} ,{ Status: 200 });
-    }
-    catch(e) {
-        console.error("Login error:", e);
-        return Response.json({ error: "Internal server error" }, { Status: 500 });
-    }
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    return Response.json({ error: "Invalid password" }, { status: 401 });
+  }
+
+  // ✅ Replaced jwt.sign() with jose-compatible token creation
+  const token = await new SignJWT({ email: user.email })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("1h")
+    .sign(new TextEncoder().encode(SECRET));
+
+  return new Response(JSON.stringify({ message: "Login successful" }), {
+    status: 200,
+    headers: {
+      "Set-Cookie": `token=${token}; HttpOnly; Path=/; Max-Age=3600; SameSite=Strict`,
+      "Content-Type": "application/json",
+    },
+  });
 }
