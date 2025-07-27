@@ -23,12 +23,14 @@ function Dashboard() {
   const [numCards, setNumCards] = useState(5);
   const [difficulty, setDifficulty] = useState("beginner");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log({ topic, numCards, difficulty });
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    // Here you would typically send the data to your API to generate flashcards
-    const res = await fetch("/api/generate-flashcards", {
+  console.log("🔍 Submitted values:", { topic, numCards, difficulty });
+
+  try {
+    // Step 1: Generate flashcards using Gemini AI
+    const genRes = await fetch("/api/generate-flashcards", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -36,17 +38,47 @@ function Dashboard() {
       body: JSON.stringify({ topic, numCards, difficulty }),
     });
 
-    const data = await res.json();
-    if (res.ok) {
-      console.log("Flashcards generated:", data.cards);
-      // Handle the generated flashcards, e.g., navigate to a new page or display them
-      const encoded = encodeURIComponent(JSON.stringify(data.cards));
-      window.location.href = `/flashcards/view?data=${encoded}`;
-    } else {
-      console.error("Error generating flashcards:", data.error);
-      // Optionally handle error, e.g., show a notification
+    if (!genRes.ok) {
+      const errorData = await genRes.json();
+      console.error("❌ Error generating flashcards:", errorData.error);
+      return; // stop execution
     }
-  };
+
+    const genData = await genRes.json();
+    const generatedCards = genData.cards;
+
+    console.log("✅ Flashcards generated:", generatedCards);
+
+    // Step 2: Save flashcards to MongoDB
+    const saveRes = await fetch("/api/save-flashcards", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        topic,
+        difficulty,
+        numCards,
+        cards: generatedCards,
+      }),
+    });
+
+    if (!saveRes.ok) {
+      const saveError = await saveRes.json();
+      console.error("❌ Failed to save flashcards:", saveError.error);
+      return; // stop execution
+    }
+
+    console.log("💾 Flashcards saved successfully!");
+
+    // Step 3: Navigate to viewer page
+    const encoded = encodeURIComponent(JSON.stringify(generatedCards));
+    window.location.href = `/flashcards/view?data=${encoded}`;
+  } catch (err) {
+    console.error("🔥 Unexpected error:", err);
+  }
+};
+
 
   return (
     <>

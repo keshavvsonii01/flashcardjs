@@ -19,7 +19,7 @@ export default function FlashcardView() {
   }, [searchParams]);
 
   return (
-    <div className="p-6">
+    <div className="p-6 text-white">
       <h1 className="text-2xl font-bold mb-4">Generated Flashcards</h1>
       {cards.length === 0 ? (
         <p>No flashcards found.</p>
@@ -30,7 +30,7 @@ export default function FlashcardView() {
               key={index}
               className="border rounded-xl shadow p-4 bg-white hover:shadow-lg transition"
             >
-              <h2 className="font-semibold">Q{index + 1}: {card.question}</h2>
+              <h2 className="font-semibold text-black">Q{index + 1}: {card.question}</h2>
               <p className="mt-2 text-gray-700">Answer: {card.answer}</p>
             </div>
           ))}
