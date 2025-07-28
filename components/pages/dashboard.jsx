@@ -4,6 +4,7 @@ import React from "react";
 import { Brain } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
 
 function Dashboard() {
   const router = useRouter();
@@ -23,62 +24,61 @@ function Dashboard() {
   const [numCards, setNumCards] = useState(5);
   const [difficulty, setDifficulty] = useState("beginner");
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  console.log("🔍 Submitted values:", { topic, numCards, difficulty });
+    console.log("🔍 Submitted values:", { topic, numCards, difficulty });
 
-  try {
-    // Step 1: Generate flashcards using Gemini AI
-    const genRes = await fetch("/api/generate-flashcards", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ topic, numCards, difficulty }),
-    });
+    try {
+      // Step 1: Generate flashcards using Gemini AI
+      const genRes = await fetch("/api/generate-flashcards", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ topic, numCards, difficulty }),
+      });
 
-    if (!genRes.ok) {
-      const errorData = await genRes.json();
-      console.error("❌ Error generating flashcards:", errorData.error);
-      return; // stop execution
+      if (!genRes.ok) {
+        const errorData = await genRes.json();
+        console.error("❌ Error generating flashcards:", errorData.error);
+        return; // stop execution
+      }
+
+      const genData = await genRes.json();
+      const generatedCards = genData.cards;
+
+      console.log("✅ Flashcards generated:", generatedCards);
+
+      // Step 2: Save flashcards to MongoDB
+      const saveRes = await fetch("/api/save-flashcards", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          topic,
+          difficulty,
+          numCards,
+          cards: generatedCards,
+        }),
+      });
+
+      if (!saveRes.ok) {
+        const saveError = await saveRes.json();
+        console.error("❌ Failed to save flashcards:", saveError.error);
+        return; // stop execution
+      }
+
+      console.log("💾 Flashcards saved successfully!");
+
+      // Step 3: Navigate to viewer page
+      const encoded = encodeURIComponent(JSON.stringify(generatedCards));
+      window.location.href = `/flashcards/view?data=${encoded}`;
+    } catch (err) {
+      console.error("🔥 Unexpected error:", err);
     }
-
-    const genData = await genRes.json();
-    const generatedCards = genData.cards;
-
-    console.log("✅ Flashcards generated:", generatedCards);
-
-    // Step 2: Save flashcards to MongoDB
-    const saveRes = await fetch("/api/save-flashcards", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        topic,
-        difficulty,
-        numCards,
-        cards: generatedCards,
-      }),
-    });
-
-    if (!saveRes.ok) {
-      const saveError = await saveRes.json();
-      console.error("❌ Failed to save flashcards:", saveError.error);
-      return; // stop execution
-    }
-
-    console.log("💾 Flashcards saved successfully!");
-
-    // Step 3: Navigate to viewer page
-    const encoded = encodeURIComponent(JSON.stringify(generatedCards));
-    window.location.href = `/flashcards/view?data=${encoded}`;
-  } catch (err) {
-    console.error("🔥 Unexpected error:", err);
-  }
-};
-
+  };
 
   return (
     <>
@@ -217,6 +217,12 @@ function Dashboard() {
               <button className="text-white" onClick={logout}>
                 LogOut
               </button>
+              <Link
+                href="/flashcards/view"
+                className="text-blue-600 underline"
+              >
+                View Your Flashcards
+              </Link>
             </div>
           </div>
         </div>
