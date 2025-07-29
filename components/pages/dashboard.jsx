@@ -112,9 +112,9 @@ function Dashboard() {
             </div>
             <div className="p-6 text-white">
               {user ? (
-                <h2 className="text-xl font-bold mb-4">Welcome, {user.name}</h2>
+                <h2 className="text-2xl font-bold mb-4">Welcome, {user.name}</h2>
               ) : (
-                <h2 className="text-xl font-bold mb-4">Welcome</h2>
+                <h2 className="text-2xl font-bold mb-4">Welcome</h2>
               )}
 
               {/* rest of your dashboard content */}

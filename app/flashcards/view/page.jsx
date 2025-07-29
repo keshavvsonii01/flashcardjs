@@ -73,7 +73,7 @@ export default function FlashcardView() {
 
   return (
     <div className="p-6 text-white">
-      {user && <p className="text-gray-600 mb-2">Viewing as: {user.name}</p>}
+      {user && <p className="text-gray-600 text-4xl mb-2">Viewing as: {user.name}</p>}
       <h1 className="text-2xl font-bold mb-4">Your Saved Flashcards</h1>
 
       {isNewSession && (
