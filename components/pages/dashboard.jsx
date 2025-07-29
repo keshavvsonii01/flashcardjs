@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Brain } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Link from "next/link";
+import { getUserFromLocalStorage } from "@/utils/getUserFromLocalStorage"; // Adjust the import path as needed
 
 function Dashboard() {
   const router = useRouter();
@@ -23,6 +24,7 @@ function Dashboard() {
   const [topic, setTopic] = useState("");
   const [numCards, setNumCards] = useState(5);
   const [difficulty, setDifficulty] = useState("beginner");
+  const [user, setUser] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -74,11 +76,21 @@ function Dashboard() {
 
       // Step 3: Navigate to viewer page
       const encoded = encodeURIComponent(JSON.stringify(generatedCards));
-      window.location.href = `/flashcards/view?data=${encoded}`;
+      window.location.href = `/flashcards/view?data=${encoded}&new=true`;
     } catch (err) {
       console.error("🔥 Unexpected error:", err);
     }
   };
+
+  useEffect(() => {
+    const user = getUserFromLocalStorage();
+
+    setUser(user);
+
+    if (!user) {
+      router.push("/login");
+    }
+  });
 
   return (
     <>
@@ -98,7 +110,15 @@ function Dashboard() {
                 Generate personalized flashcards on any topic using AI.
               </p>
             </div>
+            <div className="p-6 text-white">
+              {user ? (
+                <h2 className="text-xl font-bold mb-4">Welcome, {user.name}</h2>
+              ) : (
+                <h2 className="text-xl font-bold mb-4">Welcome</h2>
+              )}
 
+              {/* rest of your dashboard content */}
+            </div>
             <div
               className="bg-[#0e0f12] dark:bg-gray-800 rounded-lg  border drop-shadow-2xl drop-shadow-fuchsia-900 shadow-xl shadow-fuchsia-900 border-gray-200 dark:border-gray-700 p-9"
               style={{
@@ -217,10 +237,7 @@ function Dashboard() {
               <button className="text-white" onClick={logout}>
                 LogOut
               </button>
-              <Link
-                href="/flashcards/view"
-                className="text-blue-600 underline"
-              >
+              <Link href="/flashcards/view" className="text-blue-600 underline">
                 View Your Flashcards
               </Link>
             </div>

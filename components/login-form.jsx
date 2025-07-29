@@ -8,11 +8,14 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getUserFromLocalStorage } from "@/utils/getUserFromLocalStorage";
 
 export function LoginForm({ className, ...props }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -26,11 +29,13 @@ export function LoginForm({ className, ...props }) {
     });
     const data = await res.json();
 
+
     if (res.ok) {
+      localStorage.setItem("token", data.token); // Store token in localStorage
       console.log("Login successful:", data);
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 100);
+      console.log("Token saved to localStorage:", data.token);
+
+      router.push("/dashboard");
     } else {
       console.error("Login failed:", data.error);
       alert(data.error || "Login failed");
@@ -40,6 +45,12 @@ export function LoginForm({ className, ...props }) {
     // Redirect or perform other actions after login
   };
 
+
+  
+    const user = getUserFromLocalStorage();
+    console.log("User from localStorage:", user?.email);
+
+    
   return (
     <div className={cn("flex flex-col gap-6 text-white", className)} {...props}>
       <form>
