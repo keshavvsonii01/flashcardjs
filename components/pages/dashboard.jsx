@@ -112,7 +112,9 @@ function Dashboard() {
             </div>
             <div className="p-6 text-white">
               {user ? (
-                <h2 className="text-2xl font-bold mb-4">Welcome, {user.name}</h2>
+                <h2 className="text-2xl font-bold mb-4">
+                  Welcome, {user.name}
+                </h2>
               ) : (
                 <h2 className="text-2xl font-bold mb-4">Welcome</h2>
               )}
@@ -240,6 +242,12 @@ function Dashboard() {
               <Link href="/flashcards/view" className="text-blue-600 underline">
                 View Your Flashcards
               </Link>
+              <a
+                href="/flashcards/practice"
+                className="inline-block mt-4 text-blue-500 underline hover:text-blue-700"
+              >
+                ➤ Start Practice Mode
+              </a>
             </div>
           </div>
         </div>
