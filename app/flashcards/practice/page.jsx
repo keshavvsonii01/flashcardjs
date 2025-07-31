@@ -6,9 +6,9 @@ export default function PracticeModePage() {
   const [topics, setTopics] = useState([]);
   const [selectedTopic, setSelectedTopic] = useState("");
   const [loading, setLoading] = useState(true);
-  const [revisedCards, setRevisedCards] = useState(
-    () => JSON.parse(localStorage.getItem("revisedCards")) || []
-  );
+  const [revisedCardsByTopic, setRevisedCardsByTopic] = useState(() => {
+    return JSON.parse(localStorage.getItem("revisedCardsByTopic")) || {};
+  });
 
   const fetchFlashcards = async () => {
     try {
@@ -53,15 +53,27 @@ export default function PracticeModePage() {
   console.log("Filtered Cards:", filteredCards);
 
   useEffect(() => {
-    localStorage.setItem("revisedCards", JSON.stringify(revisedCards));
-  }, [revisedCards]);
+    localStorage.setItem(
+      "revisedCardsByTopic",
+      JSON.stringify(revisedCardsByTopic)
+    );
+  }, [revisedCardsByTopic]);
+
+  const currentRevised = revisedCardsByTopic[selectedTopic] || [];
 
   const toggleRevised = (cardId) => {
-    setRevisedCards((prev) =>
-      prev.includes(cardId)
-        ? prev.filter((id) => id !== cardId)
-        : [...prev, cardId]
-    );
+    setRevisedCardsByTopic((prev) => {
+      const updated = { ...prev };
+      const current = updated[selectedTopic] || [];
+
+      if (current.includes(cardId)) {
+        updated[selectedTopic] = current.filter((id) => id !== cardId);
+      } else {
+        updated[selectedTopic] = [...current, cardId];
+      }
+
+      return updated;
+    });
   };
 
   return (
@@ -118,7 +130,7 @@ export default function PracticeModePage() {
                   <div className="absolute top-2 right-2">
                     <input
                       type="checkbox"
-                      checked={revisedCards.includes(card._id)}
+                      checked={currentRevised.includes(card._id)}
                       onChange={() => toggleRevised(card._id)}
                     />
                   </div>
@@ -129,14 +141,15 @@ export default function PracticeModePage() {
         </>
       )}
       <div className="mb-4">
-        <p className="text-sm text-gray-700">
-          Revised {revisedCards.length} of {filteredCards.length} cards
+        <p className="text-sm text-gray-700 mt-2">
+          Revised {currentRevised.length} of {filteredCards.length} cards
         </p>
+
         <div className="w-full bg-gray-200 h-2 rounded-full mt-1">
           <div
             className="bg-green-500 h-2 rounded-full"
             style={{
-              width: `${(revisedCards.length / filteredCards.length) * 100}%`,
+              width: `${(currentRevised.length / filteredCards.length) * 100}%`,
             }}
           ></div>
         </div>
