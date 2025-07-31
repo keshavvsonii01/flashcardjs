@@ -32,7 +32,9 @@ export async function GET(req) {
 
   console.log("✅ Found user:", user._id);
 
-  const flashcards = await FlashCardDetail.find({ userId: user._id }).sort({ createdAt: -1 });
+  const flashcards = await FlashCardDetail.find({ userId: user._id }).sort({
+    createdAt: -1,
+  });
   console.log("✅ Flashcards found:", flashcards.length);
 
   const grouped = {};
@@ -44,4 +46,3 @@ export async function GET(req) {
 
   return Response.json(grouped);
 }
-

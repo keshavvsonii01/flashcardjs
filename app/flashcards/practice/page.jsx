@@ -13,23 +13,14 @@ export default function PracticeModePage() {
   const fetchFlashcards = async () => {
     try {
       const res = await fetch("/api/user-flashcards");
-      if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
       const data = await res.json();
-
-      // ✅ Flatten the grouped flashcards
-      const allFlashcards = Object.values(data).flat(); // each value is an array
-      console.log("Flattened flashcards:", allFlashcards);
-
+      const allFlashcards = Object.values(data).flat();
       setFlashcards(allFlashcards);
-
-      // ✅ Extract unique topics
       const uniqueTopics = [...new Set(allFlashcards.map((f) => f.topic))];
-      console.log("Topics extracted:", uniqueTopics);
-
       setTopics(uniqueTopics);
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching flashcards:", error);
+    } finally {
       setLoading(false);
     }
   };
@@ -37,20 +28,6 @@ export default function PracticeModePage() {
   useEffect(() => {
     fetchFlashcards();
   }, []);
-
-  const matchedTopic = flashcards.find(
-    (item) => item.topic?.toLowerCase() === selectedTopic.toLowerCase()
-  );
-
-  const filteredCards = matchedTopic ? matchedTopic.cards : [];
-
-  console.log(
-    "All flashcard topics:",
-    flashcards.map((f) => f.topic)
-  );
-
-  console.log("Selected topic:", selectedTopic);
-  console.log("Filtered Cards:", filteredCards);
 
   useEffect(() => {
     localStorage.setItem(
@@ -60,6 +37,12 @@ export default function PracticeModePage() {
   }, [revisedCardsByTopic]);
 
   const currentRevised = revisedCardsByTopic[selectedTopic] || [];
+
+  const matchedTopic = flashcards.find(
+    (item) => item.topic?.toLowerCase() === selectedTopic.toLowerCase()
+  );
+
+  const filteredCards = matchedTopic ? matchedTopic.cards : [];
 
   const toggleRevised = (cardId) => {
     setRevisedCardsByTopic((prev) => {
@@ -78,7 +61,7 @@ export default function PracticeModePage() {
 
   return (
     <div className="p-6 text-white">
-      <h1 className="text-2xl font-bold mb-4">Practice Mode</h1>
+      <h1 className="text-2xl font-bold mb-4">Revision Mode</h1>
 
       {loading ? (
         <p>Loading topics...</p>
@@ -106,7 +89,7 @@ export default function PracticeModePage() {
           </div>
 
           {selectedTopic === "" ? (
-            <p>Please select a topic to start practicing.</p>
+            <p>Please select a topic to start revision.</p>
           ) : filteredCards.length === 0 ? (
             <p>No flashcards available for this topic.</p>
           ) : (
@@ -126,7 +109,6 @@ export default function PracticeModePage() {
                     <p className="mt-1 text-gray-800">{card.answer}</p>
                   </details>
 
-                  {/* Mark as Revised */}
                   <div className="absolute top-2 right-2">
                     <input
                       type="checkbox"
@@ -140,20 +122,25 @@ export default function PracticeModePage() {
           )}
         </>
       )}
-      <div className="mb-4">
-        <p className="text-sm text-gray-700 mt-2">
-          Revised {currentRevised.length} of {filteredCards.length} cards
-        </p>
 
-        <div className="w-full bg-gray-200 h-2 rounded-full mt-1">
-          <div
-            className="bg-green-500 h-2 rounded-full"
-            style={{
-              width: `${(currentRevised.length / filteredCards.length) * 100}%`,
-            }}
-          ></div>
+      {selectedTopic && filteredCards.length > 0 && (
+        <div className="mt-6 mb-4">
+          <p className="text-sm text-gray-700 mt-2">
+            Revised {currentRevised.length} of {filteredCards.length} cards
+          </p>
+
+          <div className="w-full bg-gray-200 h-2 rounded-full mt-1">
+            <div
+              className="bg-green-500 h-2 rounded-full"
+              style={{
+                width: `${
+                  (currentRevised.length / filteredCards.length) * 100
+                }%`,
+              }}
+            ></div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
