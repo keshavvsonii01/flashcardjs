@@ -9,18 +9,18 @@ export default function PracticeModePage() {
 
   const fetchFlashcards = async () => {
     try {
-      const res = await fetch("/api/user-flashcards"); // must be GET
+      const res = await fetch("/api/user-flashcards");
       if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
       const data = await res.json();
 
       // ✅ Flatten the grouped flashcards
-      const allFlashcards = Object.values(data).flat();
+      const allFlashcards = Object.values(data).flat(); // each value is an array
       console.log("Flattened flashcards:", allFlashcards);
 
       setFlashcards(allFlashcards);
 
       // ✅ Extract unique topics
-      const uniqueTopics = [...new Set(allFlashcards.map(f => f.topic))];
+      const uniqueTopics = [...new Set(allFlashcards.map((f) => f.topic))];
       console.log("Topics extracted:", uniqueTopics);
 
       setTopics(uniqueTopics);
@@ -35,9 +35,20 @@ export default function PracticeModePage() {
     fetchFlashcards();
   }, []);
 
-  const filteredCards = selectedTopic
-    ? flashcards.filter((card) => card.topic === selectedTopic)
-    : [];
+const matchedTopic = flashcards.find(
+  (item) => item.topic?.toLowerCase() === selectedTopic.toLowerCase()
+);
+
+const filteredCards = matchedTopic ? matchedTopic.cards : [];
+
+
+  console.log(
+    "All flashcard topics:",
+    flashcards.map((f) => f.topic)
+  );
+
+  console.log("Selected topic:", selectedTopic);
+  console.log("Filtered Cards:", filteredCards);
 
   return (
     <div className="p-6 text-white">
@@ -57,9 +68,9 @@ export default function PracticeModePage() {
               onChange={(e) => setSelectedTopic(e.target.value)}
               className="border px-3 py-2 rounded-md"
             >
-              <option value="">-- Choose a topic --</option>
+              <option className="text-black" value="">-- Choose a topic --</option>
               {topics.map((topic, index) => (
-                <option key={index} value={topic}>
+                <option className="text-black" key={index} value={topic}>
                   {topic}
                 </option>
               ))}
@@ -72,20 +83,23 @@ export default function PracticeModePage() {
             <p>No flashcards available for this topic.</p>
           ) : (
             <div className="space-y-4">
-              {filteredCards.map((card, index) => (
-                <div
-                  key={index}
-                  className="bg-white border rounded-xl p-4 shadow-md"
-                >
-                  <p className="font-semibold text-lg">Q: {card.question}</p>
-                  <details className="mt-2">
-                    <summary className="cursor-pointer text-blue-600 underline">
-                      Show Answer
-                    </summary>
-                    <p className="mt-1 text-gray-800">{card.answer}</p>
-                  </details>
-                </div>
-              ))}
+{filteredCards.map((card, index) => (
+  <div
+    key={card._id || index}
+    className="bg-white border rounded-xl p-4 shadow-md"
+  >
+    <p className="font-semibold text-black text-lg">
+      Q: {card.question}
+    </p>
+    <details className="mt-2">
+      <summary className="cursor-pointer text-blue-600 underline">
+        Show Answer
+      </summary>
+      <p className="mt-1 text-gray-800">{card.answer}</p>
+    </details>
+  </div>
+))}
+
             </div>
           )}
         </>
