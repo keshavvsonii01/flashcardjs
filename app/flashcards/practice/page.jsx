@@ -6,6 +6,9 @@ export default function PracticeModePage() {
   const [topics, setTopics] = useState([]);
   const [selectedTopic, setSelectedTopic] = useState("");
   const [loading, setLoading] = useState(true);
+  const [revisedCards, setRevisedCards] = useState(
+    () => JSON.parse(localStorage.getItem("revisedCards")) || []
+  );
 
   const fetchFlashcards = async () => {
     try {
@@ -35,12 +38,11 @@ export default function PracticeModePage() {
     fetchFlashcards();
   }, []);
 
-const matchedTopic = flashcards.find(
-  (item) => item.topic?.toLowerCase() === selectedTopic.toLowerCase()
-);
+  const matchedTopic = flashcards.find(
+    (item) => item.topic?.toLowerCase() === selectedTopic.toLowerCase()
+  );
 
-const filteredCards = matchedTopic ? matchedTopic.cards : [];
-
+  const filteredCards = matchedTopic ? matchedTopic.cards : [];
 
   console.log(
     "All flashcard topics:",
@@ -49,6 +51,18 @@ const filteredCards = matchedTopic ? matchedTopic.cards : [];
 
   console.log("Selected topic:", selectedTopic);
   console.log("Filtered Cards:", filteredCards);
+
+  useEffect(() => {
+    localStorage.setItem("revisedCards", JSON.stringify(revisedCards));
+  }, [revisedCards]);
+
+  const toggleRevised = (cardId) => {
+    setRevisedCards((prev) =>
+      prev.includes(cardId)
+        ? prev.filter((id) => id !== cardId)
+        : [...prev, cardId]
+    );
+  };
 
   return (
     <div className="p-6 text-white">
@@ -68,7 +82,9 @@ const filteredCards = matchedTopic ? matchedTopic.cards : [];
               onChange={(e) => setSelectedTopic(e.target.value)}
               className="border px-3 py-2 rounded-md"
             >
-              <option className="text-black" value="">-- Choose a topic --</option>
+              <option className="text-black" value="">
+                -- Choose a topic --
+              </option>
               {topics.map((topic, index) => (
                 <option className="text-black" key={index} value={topic}>
                   {topic}
@@ -83,27 +99,48 @@ const filteredCards = matchedTopic ? matchedTopic.cards : [];
             <p>No flashcards available for this topic.</p>
           ) : (
             <div className="space-y-4">
-{filteredCards.map((card, index) => (
-  <div
-    key={card._id || index}
-    className="bg-white border rounded-xl p-4 shadow-md"
-  >
-    <p className="font-semibold text-black text-lg">
-      Q: {card.question}
-    </p>
-    <details className="mt-2">
-      <summary className="cursor-pointer text-blue-600 underline">
-        Show Answer
-      </summary>
-      <p className="mt-1 text-gray-800">{card.answer}</p>
-    </details>
-  </div>
-))}
+              {filteredCards.map((card, index) => (
+                <div
+                  key={index}
+                  className="bg-white border rounded-xl p-4 shadow-md relative"
+                >
+                  <p className="font-semibold text-black text-lg">
+                    Q: {card.question}
+                  </p>
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-blue-600 underline">
+                      Show Answer
+                    </summary>
+                    <p className="mt-1 text-gray-800">{card.answer}</p>
+                  </details>
 
+                  {/* Mark as Revised */}
+                  <div className="absolute top-2 right-2">
+                    <input
+                      type="checkbox"
+                      checked={revisedCards.includes(card._id)}
+                      onChange={() => toggleRevised(card._id)}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </>
       )}
+      <div className="mb-4">
+        <p className="text-sm text-gray-700">
+          Revised {revisedCards.length} of {filteredCards.length} cards
+        </p>
+        <div className="w-full bg-gray-200 h-2 rounded-full mt-1">
+          <div
+            className="bg-green-500 h-2 rounded-full"
+            style={{
+              width: `${(revisedCards.length / filteredCards.length) * 100}%`,
+            }}
+          ></div>
+        </div>
+      </div>
     </div>
   );
 }
