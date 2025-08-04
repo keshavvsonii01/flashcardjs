@@ -25,47 +25,46 @@ export default function FlashcardView() {
   }, []);
 
   // Fetch flashcards
-useEffect(() => {
-  const fetchFlashcards = async () => {
-    try {
-      const res = await fetch("/api/user-flashcards");
-      const data = await res.json();
-      if (!res.ok) {
-        console.error("Error fetching flashcards:", data.error);
-        return;
-      }
-
-      const newOnly = searchParams.get("new");
-      const encodedData = searchParams.get("data");
-
-      if (newOnly === "true" && encodedData) {
-        try {
-          const decoded = JSON.parse(decodeURIComponent(encodedData));
-          if (Array.isArray(decoded)) {
-            setNewSessionCards(decoded);
-            setIsNewSession(true);
-            setFlashcardsByDate({}); // Clear old data
-          } else {
-            console.error("Decoded data is not an array.");
-          }
-        } catch (err) {
-          console.error("Error decoding flashcards from URL:", err);
+  useEffect(() => {
+    const fetchFlashcards = async () => {
+      try {
+        const res = await fetch("/api/user-flashcards");
+        const data = await res.json();
+        if (!res.ok) {
+          console.error("Error fetching flashcards:", data.error);
+          return;
         }
-      } else {
-        setNewSessionCards([]);
-        setIsNewSession(false);
-        setFlashcardsByDate(data);
+
+        const newOnly = searchParams.get("new");
+        const encodedData = searchParams.get("data");
+
+        if (newOnly === "true" && encodedData) {
+          try {
+            const decoded = JSON.parse(decodeURIComponent(encodedData));
+            if (Array.isArray(decoded)) {
+              setNewSessionCards(decoded);
+              setIsNewSession(true);
+              setFlashcardsByDate({}); // Clear old data
+            } else {
+              console.error("Decoded data is not an array.");
+            }
+          } catch (err) {
+            console.error("Error decoding flashcards from URL:", err);
+          }
+        } else {
+          setNewSessionCards([]);
+          setIsNewSession(false);
+          setFlashcardsByDate(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch flashcards", err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error("Failed to fetch flashcards", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchFlashcards();
-}, [searchParams.toString()]);
-
+    fetchFlashcards();
+  }, [searchParams.toString()]);
 
   const toggleExpand = (date) => {
     setExpandedDates((prev) => {
@@ -94,6 +93,13 @@ useEffect(() => {
         <p className="text-gray-600 text-4xl mb-2">Viewing as: {user.name}</p>
       )}
       <h1 className="text-2xl font-bold mb-4">Your Saved Flashcards</h1>
+
+      <a
+        href="/flashcards/practice"
+        className="inline-block mt-4 text-blue-500 underline hover:text-blue-700"
+      >
+        ➤ Start Practice Mode
+      </a>
 
       {isNewSession && (
         <button
