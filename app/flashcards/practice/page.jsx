@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 
 export default function PracticeModePage() {
@@ -44,19 +45,44 @@ export default function PracticeModePage() {
 
   const filteredCards = matchedTopic ? matchedTopic.cards : [];
 
-  const toggleRevised = (cardId) => {
-    setRevisedCardsByTopic((prev) => {
-      const updated = { ...prev };
-      const current = updated[selectedTopic] || [];
+  const toggleRevised = async (cardId) => {
+    const token = localStorage.getItem("token");
 
-      if (current.includes(cardId)) {
-        updated[selectedTopic] = current.filter((id) => id !== cardId);
+    if (!token) {
+      console.error("No token found");
+      return;
+    }
+
+    let updatedRevised;
+    if (currentRevised.includes(cardId)) {
+      updatedRevised = currentRevised.filter((id) => id !== cardId);
+    } else {
+      updatedRevised = [...currentRevised, cardId];
+    }
+
+    setRevisedCardsByTopic((prev) => ({
+      ...prev,
+      [selectedTopic]: updatedRevised,
+    }));
+
+    try {
+      const res = await fetch("/api/revision/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ cardId }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        console.error("Revision save failed:", error);
       } else {
-        updated[selectedTopic] = [...current, cardId];
+        console.log("Revision saved!");
       }
-
-      return updated;
-    });
+    } catch (err) {
+      console.error("Revision save error:", err);
+    }
   };
 
   return (
