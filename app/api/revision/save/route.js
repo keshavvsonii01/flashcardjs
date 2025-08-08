@@ -1,53 +1,69 @@
+// /api/revision/save
 import connectDB from "@/lib/db";
 import RevisionProgress from "@/models/RevisionProgress";
-import UserDetails from "@/models/Logindetails"; // ✅ your user model
+import UserDetails from "@/models/Logindetails";
 import { getJWTPayload } from "@/utils/auth";
 import { cookies } from "next/headers";
+import mongoose from "mongoose";
 
 export async function POST(req) {
   await connectDB();
 
   const cookieStore = cookies();
   const token = cookieStore.get("token")?.value;
-
   if (!token) {
-    console.log("❌ No token found");
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   let payload;
   try {
     payload = await getJWTPayload(token);
-    console.log("✅ JWT Payload:", payload);
-  } catch (error) {
-    console.log("❌ Error decoding token:", error);
+  } catch {
     return Response.json({ error: "Invalid token" }, { status: 401 });
   }
 
   const user = await UserDetails.findOne({ email: payload.email });
   if (!user) {
-    console.log("❌ No user found for email:", payload.email);
     return Response.json({ error: "User not found" }, { status: 404 });
   }
 
-  const body = await req.json();
-  const { cardId } = body;
+  const { cardId, topic } = await req.json();
 
-  if (!cardId) {
-    return Response.json({ error: "Missing cardId" }, { status: 400 });
+  if (!cardId || !topic) {
+    return Response.json({ error: "Missing cardId or topic" }, { status: 400 });
+  }
+
+  let cardObjectId;
+  try {
+    // Fixed: Use new syntax for ObjectId conversion
+    cardObjectId = new mongoose.Types.ObjectId(cardId);
+  } catch {
+    return Response.json({ error: "Invalid cardId format" }, { status: 400 });
   }
 
   try {
-    const progress = await RevisionProgress.findOneAndUpdate(
-      { userId: user._id, cardId },
-      { revisedAt: new Date() },
-      { upsert: true, new: true }
-    );
+    // Check if already exists
+    const existing = await RevisionProgress.findOne({
+      userId: user._id,
+      cardId: cardObjectId,
+    });
 
-    console.log("✅ Revision progress saved:", progress);
-    return Response.json({ success: true, progress });
-  } catch (error) {
-    console.error("❌ Error saving revision:", error);
+    if (existing) {
+      await RevisionProgress.deleteOne({ _id: existing._id });
+      console.log(`Removed progress for card ${cardId}`);
+      return Response.json({ success: true, action: "removed" });
+    } else {
+      const progress = await RevisionProgress.create({
+        userId: user._id,
+        cardId: cardObjectId,
+        topic,
+        revisedAt: new Date(),
+      });
+      console.log(`Added progress for card ${cardId}`);
+      return Response.json({ success: true, action: "added", progress });
+    }
+  } catch (err) {
+    console.error("❌ Error saving revision:", err);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
