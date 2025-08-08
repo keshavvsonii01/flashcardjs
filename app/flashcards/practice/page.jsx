@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function PracticeModePage() {
   const [flashcards, setFlashcards] = useState([]); // array of groups { topic, cards: [...] }
@@ -54,7 +55,7 @@ export default function PracticeModePage() {
           }
         });
       });
-      
+
       setRevisedCardsByTopic(grouped);
     } catch (err) {
       console.error("Error fetching revision progress:", err);
@@ -102,7 +103,7 @@ export default function PracticeModePage() {
   // Toggle revised: optimistic update + call backend to toggle (your save route toggles add/remove)
   const toggleRevised = async (cardId) => {
     if (!selectedTopic) return;
-    
+
     // optimistic update
     const prevForTopic = revisedCardsByTopic[selectedTopic] || [];
     const isCurrently = prevForTopic.includes(cardId);
@@ -131,7 +132,7 @@ export default function PracticeModePage() {
 
       const result = await res.json();
       console.log(`Revision ${result.action} for card ${cardId}`);
-      
+
       // success — server toggles; we already updated optimistically
     } catch (err) {
       console.error("Revision save failed:", err);
@@ -143,6 +144,18 @@ export default function PracticeModePage() {
       alert("Failed to save revision progress. Please try again.");
     } finally {
       setSavingCardId(null);
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await fetch("/api/logout", {
+        method: "POST",
+      });
+      router.push("/login");
+    } catch (e) {
+      console.error("Logout error:", e);
+      // Optionally handle error, e.g., show a notification
     }
   };
 
@@ -166,7 +179,11 @@ export default function PracticeModePage() {
             >
               <option value="">-- Choose a topic --</option>
               {topics.map((topic) => (
-                <option className="text-white bg-gray-800" key={topic} value={topic}>
+                <option
+                  className="text-white bg-gray-800"
+                  key={topic}
+                  value={topic}
+                >
                   {topic}
                 </option>
               ))}
@@ -203,7 +220,9 @@ export default function PracticeModePage() {
                       className="w-4 h-4"
                     />
                     {savingCardId === String(card._id) && (
-                      <span className="ml-2 text-xs text-gray-500">Saving...</span>
+                      <span className="ml-2 text-xs text-gray-500">
+                        Saving...
+                      </span>
                     )}
                   </div>
                 </div>
@@ -231,6 +250,11 @@ export default function PracticeModePage() {
           </div>
         </div>
       )}
+      <div>
+        <button className="text-white cursor-pointer" onClick={logout}>
+          LogOut
+        </button>
+      </div>
     </div>
   );
 }

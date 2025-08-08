@@ -2,14 +2,15 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getUserFromLocalStorage } from "@/utils/getUserFromLocalStorage";
-import jsPDF from 'jspdf';
+import jsPDF from "jspdf";
 
 // PDF Export functionality
 const generatePDF = async (content, filename) => {
+
   try {
-    console.log('Generating PDF with content:', content);
+    console.log("Generating PDF with content:", content);
     const pdf = new jsPDF();
-    
+
     let yPosition = 20;
     const pageHeight = pdf.internal.pageSize.height;
     const marginLeft = 20;
@@ -18,16 +19,16 @@ const generatePDF = async (content, filename) => {
 
     // Title
     pdf.setFontSize(18);
-    pdf.setFont(undefined, 'bold');
+    pdf.setFont(undefined, "bold");
     pdf.text(content.title, marginLeft, yPosition);
     yPosition += 15;
 
     // Date and Topic info
     pdf.setFontSize(12);
-    pdf.setFont(undefined, 'normal');
+    pdf.setFont(undefined, "normal");
     pdf.text(`Date: ${content.date}`, marginLeft, yPosition);
     yPosition += 8;
-    
+
     if (content.topic) {
       pdf.text(`Topic: ${content.topic}`, marginLeft, yPosition);
       yPosition += 8;
@@ -41,7 +42,7 @@ const generatePDF = async (content, filename) => {
       if (content.topics.length > 1) {
         // Multiple topics - show topic header
         pdf.setFontSize(14);
-        pdf.setFont(undefined, 'bold');
+        pdf.setFont(undefined, "bold");
         pdf.text(`Topic: ${topicData.topic}`, marginLeft, yPosition);
         yPosition += 10;
       }
@@ -56,24 +57,27 @@ const generatePDF = async (content, filename) => {
 
         // Card number
         pdf.setFontSize(12);
-        pdf.setFont(undefined, 'bold');
+        pdf.setFont(undefined, "bold");
         pdf.text(`Card ${cardIndex + 1}:`, marginLeft, yPosition);
         yPosition += 8;
 
         // Question
-        pdf.setFont(undefined, 'bold');
-        pdf.text('Q: ', marginLeft, yPosition);
-        pdf.setFont(undefined, 'normal');
-        
-        const questionLines = pdf.splitTextToSize(card.question, pageWidth - 15);
+        pdf.setFont(undefined, "bold");
+        pdf.text("Q: ", marginLeft, yPosition);
+        pdf.setFont(undefined, "normal");
+
+        const questionLines = pdf.splitTextToSize(
+          card.question,
+          pageWidth - 15
+        );
         pdf.text(questionLines, marginLeft + 15, yPosition);
         yPosition += questionLines.length * 6 + 5;
 
         // Answer
-        pdf.setFont(undefined, 'bold');
-        pdf.text('A: ', marginLeft, yPosition);
-        pdf.setFont(undefined, 'normal');
-        
+        pdf.setFont(undefined, "bold");
+        pdf.text("A: ", marginLeft, yPosition);
+        pdf.setFont(undefined, "normal");
+
         const answerLines = pdf.splitTextToSize(card.answer, pageWidth - 15);
         pdf.text(answerLines, marginLeft + 15, yPosition);
         yPosition += answerLines.length * 6 + 10;
@@ -94,35 +98,35 @@ const generatePDF = async (content, filename) => {
 
     // Save the PDF
     pdf.save(filename);
-    console.log('PDF saved successfully:', filename);
+    console.log("PDF saved successfully:", filename);
     return true;
   } catch (error) {
-    console.error('Error generating PDF:', error);
+    console.error("Error generating PDF:", error);
     return false;
   }
 };
 
-const PDFExportButton = ({ 
-  exportType, 
-  date, 
-  topic = null, 
-  flashcardData, 
+const PDFExportButton = ({
+  exportType,
+  date,
+  topic = null,
+  flashcardData,
   topicCards = null,
-  className = "" 
+  className = "",
 }) => {
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async () => {
     setIsExporting(true);
-    
+
     try {
       let content;
       let filename;
 
-      if (exportType === 'date') {
+      if (exportType === "date") {
         // Export entire date - transform your data structure
         const dateData = flashcardData[date] || [];
-        
+
         // Group by topics like your existing logic
         const topicMap = {};
         dateData.forEach((entry) => {
@@ -131,7 +135,10 @@ const PDFExportButton = ({
           topicMap[topicName].push(...entry.cards);
         });
 
-        const totalCards = Object.values(topicMap).reduce((sum, cards) => sum + cards.length, 0);
+        const totalCards = Object.values(topicMap).reduce(
+          (sum, cards) => sum + cards.length,
+          0
+        );
 
         content = {
           title: `Flashcards - ${date}`,
@@ -140,11 +147,11 @@ const PDFExportButton = ({
           totalCards: totalCards,
           topics: Object.entries(topicMap).map(([topicName, cards]) => ({
             topic: topicName,
-            cards: cards
-          }))
+            cards: cards,
+          })),
         };
-        
-        filename = `flashcards_${date.replace(/[\/\s]/g, '-')}.pdf`;
+
+        filename = `flashcards_${date.replace(/[\/\s]/g, "-")}.pdf`;
       } else {
         // Export specific topic
         content = {
@@ -152,25 +159,30 @@ const PDFExportButton = ({
           date: date,
           topic: topic,
           totalCards: topicCards.length,
-          topics: [{
-            topic: topic,
-            cards: topicCards
-          }]
+          topics: [
+            {
+              topic: topic,
+              cards: topicCards,
+            },
+          ],
         };
-        
-        filename = `flashcards_${topic.replace(/[\/\s]/g, '-')}_${date.replace(/[\/\s]/g, '-')}.pdf`;
+
+        filename = `flashcards_${topic.replace(/[\/\s]/g, "-")}_${date.replace(
+          /[\/\s]/g,
+          "-"
+        )}.pdf`;
       }
 
       const success = await generatePDF(content, filename);
-      
+
       if (success) {
-        alert('PDF exported successfully!');
+        alert("PDF exported successfully!");
       } else {
-        alert('Failed to export PDF. Please try again.');
+        alert("Failed to export PDF. Please try again.");
       }
     } catch (error) {
-      console.error('Export error:', error);
-      alert('An error occurred while exporting. Please try again.');
+      console.error("Export error:", error);
+      alert("An error occurred while exporting. Please try again.");
     } finally {
       setIsExporting(false);
     }
@@ -182,22 +194,48 @@ const PDFExportButton = ({
       disabled={isExporting}
       className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md transition-colors ml-2 ${
         isExporting
-          ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
-          : 'bg-blue-600 text-white hover:bg-blue-700'
+          ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+          : "bg-blue-600 text-white hover:bg-blue-700"
       } ${className}`}
     >
       {isExporting ? (
         <>
-          <svg className="animate-spin -ml-1 mr-1 h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <svg
+            className="animate-spin -ml-1 mr-1 h-3 w-3 text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
           </svg>
           Exporting...
         </>
       ) : (
         <>
-          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <svg
+            className="w-3 h-3 mr-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
           </svg>
           PDF
         </>
@@ -299,24 +337,40 @@ export default function FlashcardView() {
       date: new Date().toLocaleDateString(),
       topic: null,
       totalCards: newSessionCards.length,
-      topics: [{
-        topic: "New Session",
-        cards: newSessionCards
-      }]
+      topics: [
+        {
+          topic: "New Session",
+          cards: newSessionCards,
+        },
+      ],
     };
 
-    const filename = `new_session_flashcards_${new Date().toISOString().split('T')[0]}.pdf`;
-    
+    const filename = `new_session_flashcards_${
+      new Date().toISOString().split("T")[0]
+    }.pdf`;
+
     try {
       const success = await generatePDF(content, filename);
       if (success) {
-        alert('PDF exported successfully!');
+        alert("PDF exported successfully!");
       } else {
-        alert('Failed to export PDF. Please try again.');
+        alert("Failed to export PDF. Please try again.");
       }
     } catch (error) {
-      console.error('Export error:', error);
-      alert('An error occurred while exporting. Please try again.');
+      console.error("Export error:", error);
+      alert("An error occurred while exporting. Please try again.");
+    }
+  };
+
+    const logout = async () => {
+    try {
+      await fetch("/api/logout", {
+        method: "POST",
+      });
+      router.push("/login");
+    } catch (e) {
+      console.error("Logout error:", e);
+      // Optionally handle error, e.g., show a notification
     }
   };
 
@@ -346,8 +400,18 @@ export default function FlashcardView() {
             onClick={handleExportNewSession}
             className="inline-flex items-center px-3 py-1 text-sm font-medium rounded-md transition-colors bg-green-600 text-white hover:bg-green-700"
           >
-            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <svg
+              className="w-4 h-4 mr-1.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
             Export New Cards as PDF
           </button>
@@ -396,7 +460,7 @@ export default function FlashcardView() {
                   )}{" "}
                   flashcards)
                 </button>
-                
+
                 {/* Export entire date button */}
                 <PDFExportButton
                   exportType="date"
@@ -416,7 +480,7 @@ export default function FlashcardView() {
                         >
                           {topic} ({entries.length})
                         </button>
-                        
+
                         {/* Export topic button */}
                         <PDFExportButton
                           exportType="topic"
@@ -452,6 +516,11 @@ export default function FlashcardView() {
           );
         })
       )}
+      <div>
+        <button className="text-white cursor-pointer" onClick={logout}>
+          LogOut
+        </button>
+      </div>
     </div>
   );
 }

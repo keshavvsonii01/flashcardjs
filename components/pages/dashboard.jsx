@@ -9,6 +9,7 @@ import { getUserFromLocalStorage } from "@/utils/getUserFromLocalStorage"; // Ad
 
 function Dashboard() {
   const router = useRouter();
+  
   const logout = async () => {
     try {
       await fetch("/api/logout", {
@@ -236,7 +237,7 @@ function Dashboard() {
               </div>
             </div>
             <div>
-              <button className="text-white" onClick={logout}>
+              <button className="text-white cursor-pointer" onClick={logout}>
                 LogOut
               </button>
               <Link href="/flashcards/view" className="text-blue-600 underline">
